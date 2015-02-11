@@ -1,4 +1,5 @@
-echo "\nReady to start ? Brutalize a key with your favorite finger"
+echo ""
+echo "Ready to start ? Brutalize a key with your favorite finger"
 read -n1 -s
 
 echo -n "Please give me your User ID: "
