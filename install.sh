@@ -28,6 +28,7 @@ export SPACE_CP_API_KEY=$API_KEY
 echo "
 --> Opening some ports"
 echo 'y' | ufw enable &> /dev/null
+echo '-------------------'
 echo "### Opening port 22"
 ufw allow 22 &> /dev/null
 echo "### Opening port 25565"
@@ -36,6 +37,7 @@ echo "### Opening port 35565"
 ufw allow 35565 &> /dev/null
 echo "### Opening port 35566"
 ufw allow 35566 &> /dev/null
+echo '-------------------'
 
 echo "
 --> Adding the Java 8 apt repository"
@@ -55,18 +57,32 @@ swapon /swapfile &> /dev/null
 swapon -s &> /dev/null
 
 echo "
---> Installing dependencies"
+--> Installing Java 8"
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -y install oracle-java8-installer nodejs build-essential unzip makepasswd &> /dev/null
+apt-get -y install oracle-java8-installer
+
+echo "
+--> Installing Node JS"
+apt-get -y nodejs &> /dev/null
+echo "
+--> Installing build-essential"
+apt-get -y build-essential &> /dev/null
+echo "
+--> Installing Unzip"
+apt-get -y unzip &> /dev/null
+echo "
+--> Installing makepasswd"
+apt-get -y makepasswd &> /dev/null
 
 if [ -z "$(getent passwd SpaceCP)" ]; then
     echo "
---> Creating a new user"
+    --> Creating a new user"
     useradd -m SpaceCP &> /dev/null
     export SPACE_CP_PASSWORD=$(makepasswd)
     echo $SPACE_CP_PASSWORD | passwd SpaceCP &> /dev/null
-    echo "The Password for your SpaceCP user is '$SPACE_CP_PASSWORD'"
+    echo "
+    --> The Password for your SpaceCP user is '$SPACE_CP_PASSWORD'"
 else
         echo "
 --> SpaceCP user already exists"
@@ -74,7 +90,7 @@ fi
 
 su SpaceCP <<'EOF'
 echo "
---> Installing daemon with User ID: $SPACE_CP_USER_ID and API Key: $SPACE_CP_API_KEY"
+--> Installing daemon with User ID: $SPACE_CP_USER_ID and API Key: $SPACE_CP_API_KEY. This might take some time ..."
 if [ -e ~/spacecp ]; then
   cd ~/spacecp
 else
@@ -109,14 +125,16 @@ else
   "
 fi
 
-if grep -q "alias houston='node /home/SpaceCP/spacecp/houston'" "/etc/bashrc"; then
+if grep -q "alias houston='node /home/SpaceCP/spacecp/houston'" "~/.profile"; then
  echo '--> Toolbelt already installed !' 
 else
   echo "
   --> Installing command line toolbet !"
-  sudo echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> /etc/bashrc
+  echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> ~/.profile
+  echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> /home/SpaceCP/.profile
+  source ~/.profile
 fi
 
-echo "-->Thats it ! We're done ! "
+echo "--> Thats it ! We're done ! "
 echo "To use the use the 'houston' command for more information"
 
