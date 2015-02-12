@@ -1,4 +1,19 @@
 echo ""
+check_upstart_service(){
+    status $1 | grep -q "^$1 start" > /dev/null
+    return $?
+}
+
+if [ "$(id -u)" != "0" ]
+then
+  echo "This script must be run as root!" 1>&2
+  exit 1
+fi
+
+if [ ! -x /usr/bin/wget ]; then
+  command -v wget >/dev/null 2>&1 || { echo >&2 "--> Installing wget"; apt-get install wget; }
+fi
+
 echo "Ready to start ? Brutalize a key with your favorite finger"
 read -n1 -s
 
@@ -12,43 +27,43 @@ export SPACE_CP_API_KEY=$API_KEY
 
 echo "
 --> Opening some ports"
-ufw enable
+echo 'y' | ufw enable &> /dev/null
 echo "### Opening port 22"
-ufw allow 22
+ufw allow 22 &> /dev/null
 echo "### Opening port 25565"
-ufw allow 25565
+ufw allow 25565 &> /dev/null
 echo "### Opening port 35565"
-ufw allow 35565
+ufw allow 35565 &> /dev/null
 echo "### Opening port 35566"
-ufw allow 35566
+ufw allow 35566 &> /dev/null
 
 echo "
 --> Adding the Java 8 apt repository"
-rf /etc/apt/sources.list.d/webupd8team-java-trusty.list 2>/dev/null
-apt-add-repository -y ppa:webupd8team/java
+rf /etc/apt/sources.list.d/webupd8team-java-trusty.list &> /dev/null
+apt-add-repository -y ppa:webupd8team/java &> /dev/null
 echo "
 --> Adding the Node apt repository"
-rf /etc/apt/sources.list.d/nodesource.list 2>/dev/null
-curl -sL https://deb.nodesource.com/setup | bash -
+rf /etc/apt/sources.list.d/nodesource.list &> /dev/null
+curl -sL https://deb.nodesource.com/setup | bash - &> /dev/null
 
 echo "
 --> Adding a 2GB Swapfile"
-fallocate -l 2G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-swapon -s
+fallocate -l 2G /swapfile &> /dev/null
+chmod 600 /swapfile &> /dev/null
+mkswap /swapfile &> /dev/null
+swapon /swapfile &> /dev/null
+swapon -s &> /dev/null
 
 echo "
 --> Installing dependencies"
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -y install oracle-java8-installer nodejs build-essential unzip makepasswd
+apt-get -y install oracle-java8-installer nodejs build-essential unzip makepasswd &> /dev/null
 
 if [ -z "$(getent passwd SpaceCP)" ]; then
     echo "
---> Creating a new sudo user"
-    useradd -m SpaceCP
+--> Creating a new user"
+    useradd -m SpaceCP &> /dev/null
     export SPACE_CP_PASSWORD=$(makepasswd)
     echo $SPACE_CP_PASSWORD | passwd SpaceCP &> /dev/null
     echo "The Password for your SpaceCP user is '$SPACE_CP_PASSWORD'"
@@ -66,27 +81,42 @@ else
   mkdir ~/spacecp
   cd ~/spacecp
 fi
-wget http://dl.spacecp.net/houston/houston.zip
-unzip houston.zip
-rm houston.zip
-npm install
+wget http://dl.spacecp.net/houston/houston.zip &> /dev/null
+unzip houston.zip &> /dev/null
+rm houston.zip 
+npm install &> /dev/null
 echo "
 --> Bootsrapping Houston"
 node houston bootstrap -i $SPACE_CP_USER_ID -k $SPACE_CP_API_KEY -f
 EOF
 
 echo "
---> Creating a upstart script"
-wget -O /etc/init/space_cp.conf https://raw.githubusercontent.com/ValkyrieUK/SpaceCP-fast-install/master/space_cp.conf
+--> Downloading the upstart script"
+wget -O /etc/init/space_cp.conf https://raw.githubusercontent.com/ValkyrieUK/SpaceCP-fast-install/master/space_cp.conf &> /dev/null
 
-echo "
---> Starting SpaceCP daemon"
-start space_cp
+if [ check_upstart_service space_cp ]; then
+  echo "
+  --> SpaceCP daemon already running, 'tail -f /var/log/space_cp.log' to check the logs."
+else
+  echo "
+  --> Starting SpaceCP daemon"
+  start space_cp
 
-echo "
---> Space CP daemon is up and running ! Use the command below to look at the logs !
+  echo "
+  --> Space CP daemon is up and running ! Use the command below to look at the logs !
 
-tail -f /var/log/space_cp.log
-"
+  tail -f /var/log/space_cp.log
+  "
+fi
 
+if grep -q "alias houston='node /home/SpaceCP/spacecp/houston'" "/etc/bashrc"; then
+ echo '--> Toolbelt already installed !' 
+else
+  echo "
+  --> Installing command line toolbet !"
+  sudo echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> /etc/bashrc
+fi
+
+echo "-->Thats it ! We're done ! "
+echo "To use the use the 'houston' command for more information"
 
