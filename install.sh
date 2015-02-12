@@ -53,7 +53,7 @@ EOF
 
 echo "
 --> Creating a upstart script"
-wget https://mygiturl.com /etc/init/space_cp.conf
+wget https://raw.githubusercontent.com/ValkyrieUK/SpaceCP-fast-install/master/space_cp.conf /etc/init/space_cp.conf
 
 echo "
 --> Starting SpaceCP daemon"
