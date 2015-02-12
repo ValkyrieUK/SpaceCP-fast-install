@@ -49,10 +49,20 @@ unzip houston.zip
 rm houston.zip
 npm install
 node houston bootstrap -i $SPACE_CP_USER_ID -k $SPACE_CP_API_KEY -f
+EOF
 
 echo "
---> Starting daemon"
+--> Creating a upstart script"
+wget https://mygiturl.com /etc/init/space_cp.conf
+
 echo "
---> Check the web panel for a connection"
-node houston start
-EOF
+--> Starting SpaceCP daemon"
+start space_cp
+
+echo "
+--> Space CP daemon is up and running ! Use the command below to look at the logs !
+
+tail -f /var/log/space_cp.log
+"
+
+
