@@ -57,23 +57,23 @@ swapon /swapfile &> /dev/null
 swapon -s &> /dev/null
 
 echo "
---> Installing Java 8"
+--> Installing Java 8. This may take a while..."
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -y install oracle-java8-installer
+apt-get -y install oracle-java8-installer &> /dev/null
 
 echo "
 --> Installing Node JS"
-apt-get -y nodejs &> /dev/null
+apt-get install -y nodejs &> /dev/null
 echo "
 --> Installing build-essential"
-apt-get -y build-essential &> /dev/null
+apt-get install -y build-essential &> /dev/null
 echo "
 --> Installing Unzip"
-apt-get -y unzip &> /dev/null
+apt-get install -y unzip &> /dev/null
 echo "
 --> Installing makepasswd"
-apt-get -y makepasswd &> /dev/null
+apt-get install -y makepasswd &> /dev/null
 
 if [ -z "$(getent passwd SpaceCP)" ]; then
     echo "
@@ -112,14 +112,14 @@ wget -O /etc/init/space_cp.conf https://raw.githubusercontent.com/ValkyrieUK/Spa
 
 if [ check_upstart_service space_cp ]; then
   echo "
-  --> SpaceCP daemon already running, 'tail -f /var/log/space_cp.log' to check the logs."
+--> SpaceCP daemon already running, 'tail -f /var/log/space_cp.log' to check the logs."
 else
   echo "
-  --> Starting SpaceCP daemon"
+--> Starting SpaceCP daemon"
   start space_cp
 
   echo "
-  --> Space CP daemon is up and running ! Use the command below to look at the logs !
+--> Space CP daemon is up and running ! Use the command below to look at the logs !
 
   tail -f /var/log/space_cp.log
   "
@@ -129,12 +129,13 @@ if grep -q "alias houston='node /home/SpaceCP/spacecp/houston'" "~/.profile"; th
  echo '--> Toolbelt already installed !' 
 else
   echo "
-  --> Installing command line toolbet !"
+--> Installing command line toolbet !"
   echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> ~/.profile
   echo "alias houston='node /home/SpaceCP/spacecp/houston'" >> /home/SpaceCP/.profile
   source ~/.profile
 fi
 
 echo "--> Thats it ! We're done ! "
-echo "To use the use the 'houston' command for more information"
+echo ""
+echo "--> To use the use the 'houston' command for more information"
 
