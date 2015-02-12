@@ -11,6 +11,14 @@ read API_KEY
 export SPACE_CP_API_KEY=$API_KEY
 
 echo "
+--> Opening daemon port"
+ufw enable
+ufw allow 22
+ufw allow 25565
+ufw allow 35565
+ufw allow 35566
+
+echo "
 --> Adding some apt repositories"
 rf /etc/apt/sources.list.d/webupd8team-java-trusty.list 2>/dev/null
 rf /etc/apt/sources.list.d/nodesource.list 2>/dev/null
@@ -18,19 +26,18 @@ apt-add-repository -y ppa:webupd8team/java
 curl -sL https://deb.nodesource.com/setup | bash -
 
 echo "
+--> Adding a Swapfile"
+dd if=/dev/zero of=/swapfile bs=1G count=2
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile   none    swap    sw    0   0' >> /etc/fstab 
+
+echo "
 --> Installing dependencies"
 apt-get update
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
 apt-get -y install oracle-java8-installer nodejs build-essential unzip makepasswd
-
-echo "
---> Opening daemon port"
-ufw enable
-ufw allow 22
-ufw allow 25565
-ufw allow 35565
-ufw allow 35566
 
 echo "
 --> Creating a new sudo user"
@@ -53,7 +60,7 @@ EOF
 
 echo "
 --> Creating a upstart script"
-wget https://raw.githubusercontent.com/ValkyrieUK/SpaceCP-fast-install/master/space_cp.conf /etc/init/space_cp.conf
+wget -O /etc/init/space_cp.conf https://raw.githubusercontent.com/ValkyrieUK/SpaceCP-fast-install/master/space_cp.conf
 
 echo "
 --> Starting SpaceCP daemon"
